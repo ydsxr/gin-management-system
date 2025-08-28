@@ -19,7 +19,7 @@ type Goods struct {
 	GoodsColor    string
 	GoodsKeywords string
 	GoodsDesc     string
-	Content       string
+	GoodsContent  string
 	IsDelete      int
 	IsHot         int
 	IsBest        int

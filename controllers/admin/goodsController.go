@@ -20,7 +20,11 @@ type GoodsController struct {
 }
 
 func (con GoodsController) Index(c *gin.Context) {
-	c.HTML(http.StatusOK, "admin/goods/index.html", gin.H{})
+	goodsList := []models.Goods{}
+	models.DB.Find(&goodsList)
+	c.HTML(http.StatusOK, "admin/goods/index.html", gin.H{
+		"goodsList": goodsList,
+	})
 }
 func (con GoodsController) Add(c *gin.Context) {
 	// 获取商品分类
@@ -70,15 +74,6 @@ func (con GoodsController) GoodsTypeAttribute(c *gin.Context) {
 	}
 }
 func (con GoodsController) DoAdd(c *gin.Context) {
-	// 表单中有多个相同的name
-	// attrIdList := c.PostFormArray("attr_id_list")
-	// attrValueList := c.PostFormArray("attr_value_list")
-	// goodsImageList := c.PostFormArray("goods_image_list")
-	// c.JSON(200,gin.H{
-	// 	"attrIdList":attrIdList,
-	// 	"attrValueList":attrValueList,
-	// 	"goodsImageList":goodsImageList,
-	// })
 	//1、获取表单提交过来的数据
 	title := c.PostForm("title")
 	subTitle := c.PostForm("sub_title")
@@ -165,7 +160,7 @@ func (con GoodsController) DoAdd(c *gin.Context) {
 			goodsImgObj.AddTime = int(models.GetUnix())
 			models.DB.Create(&goodsImgObj)
 		}
-		wg.Done()  // 标记减一
+		wg.Done() // 标记减一
 	}()
 	//6、增加规格包装 attrIdList和attrValueList一一对应
 	wg.Add(1)
@@ -196,14 +191,85 @@ func (con GoodsController) DoAdd(c *gin.Context) {
 			goodsAttrObj.AddTime = int(models.GetUnix())
 			models.DB.Create(&goodsAttrObj)
 		}
-		wg.Done()   // 标记减一
+		wg.Done() // 标记减一
 	}()
-	wg.Wait()  // 标记为0时开始往下执行
+	wg.Wait() // 标记为0时开始往下执行
 	con.Success(c, "增加商品成功", "/admin/goods")
 
 }
 func (con GoodsController) Edit(c *gin.Context) {
+	//1、获取要修改商品数据
+	id, err1 := models.Int(c.Query("id"))
+	if err1 != nil {
+		con.Error(c, "传入参数错误", "/admin/goods")
+	}
+	goods := models.Goods{Id: id}
+	models.DB.Find(&goods)
+	//2、获取商品分类
+	goodsCateList := []models.GoodsCate{}
+	models.DB.Where("pid=?", 0).Preload("GoodsCateItems", func(db *gorm.DB) *gorm.DB {
+		return db.Order("goods_cate.sort ASC")
+	}).Order("sort ASC").Find(&goodsCateList)
+	//3、获取所有颜色 以及选中的颜色
+	goodsColorSlice := strings.Split(goods.GoodsColor, ",") //切片 类似于数组 元素可以不是数
+	goodsColorMap := make(map[string]string)                // 转化为map类型是为了做对比
+	for _, v := range goodsColorSlice {
+		goodsColorMap[v] = v
+	}
+	goodsColorList := []models.GoodsColor{}
+	models.DB.Find(&goodsColorList)
+	for i := 0; i < len(goodsColorList); i++ {
+		_, ok := goodsColorMap[models.String(goodsColorList[i].Id)]
+		if ok {
+			goodsColorList[i].Checked = true
+		}
+	}
+	//4、商品的图库信息
+	goodsImageList := []models.GoodsImage{}
+	models.DB.Where("goods_id=?", goods.Id).Find(&goodsImageList)
+	//5、获取商品类型
+	goodsTypeList := []models.GoodsType{}
+	models.DB.Find(&goodsTypeList)
+	//6、获取规格信息
+	goodsAttrList := []models.GoodsAttr{}
+	models.DB.Where("goods_id=?", goods.Id).Find(&goodsAttrList)
+	goodsAttrStr := ""
+	for _, v := range goodsAttrList {
+		if v.AttributeType == 1 {
+			goodsAttrStr += fmt.Sprintf(`<li><span>%v: </span> <input type="hidden" name="attr_id_list" value="%v" />   <input type="text" name="attr_value_list" value="%v" /></li>`, v.AttributeTitle, v.AttributeId, v.AttributeValue)
+		} else if v.AttributeType == 2 {
+			goodsAttrStr += fmt.Sprintf(`<li><span>%v: </span><input type="hidden" name="attr_id_list" value="%v" />  <textarea cols="50" rows="3" name="attr_value_list">%v</textarea></li>`, v.AttributeTitle, v.AttributeId, v.AttributeValue)
+		} else {
+			//获取当前类型对应的值
+			goodsTypeArttribute := models.GoodsTypeAttribute{Id: v.AttributeId}
+			models.DB.Find(&goodsTypeArttribute)
+			attrValueSlice := strings.Split(goodsTypeArttribute.AttrValue, "\n")
 
+			goodsAttrStr += fmt.Sprintf(`<li><span>%v: </span>  <input type="hidden" name="attr_id_list" value="%v" /> `, v.AttributeTitle, v.AttributeId)
+			goodsAttrStr += fmt.Sprintf(`<select name="attr_value_list">`)
+			for i := 0; i < len(attrValueSlice); i++ {
+				if attrValueSlice[i] == v.AttributeValue {
+					goodsAttrStr += fmt.Sprintf(`<option value="%v" selected >%v</option>`, attrValueSlice[i], attrValueSlice[i])
+				} else {
+					goodsAttrStr += fmt.Sprintf(`<option value="%v">%v</option>`, attrValueSlice[i], attrValueSlice[i])
+				}
+			}
+			goodsAttrStr += fmt.Sprintf(`</select>`)
+			goodsAttrStr += fmt.Sprintf(`</li>`)
+
+		}
+	}
+
+	// 获取商品规格包装
+
+	c.HTML(http.StatusOK, "admin/goods/edit.html", gin.H{
+		"goods":          goods,
+		"goodsCateList":  goodsCateList,
+		"goodsColorList": goodsColorList,
+		"goodsTypeList":  goodsTypeList,
+		"goodsAttrStr":  goodsAttrStr,
+		"goodsImageList":goodsImageList,
+	})
 }
 func (con GoodsController) DoEdit(c *gin.Context) {
 

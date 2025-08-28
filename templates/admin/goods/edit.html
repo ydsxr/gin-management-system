@@ -1,68 +1,189 @@
-{{ define "admin/goodsCate/edit.html" }}
+{{ define "admin/goods/edit.html" }}
 {{ template "admin/public/page_header.html" .}}
+<!-- 富文本编辑器 -->
+<link href="/static/wysiwyg-editor/css/froala_editor.pkgd.min.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="/static/wysiwyg-editor/js/froala_editor.pkgd.min.js"></script>
+<script type="text/javascript" src="/static/wysiwyg-editor/js/zh_cn.js"></script>
+<!-- 上传图片的js css -->
+<link rel="stylesheet" type="text/css" href="/static/diyUpload/css/webuploader.css">
+<link rel="stylesheet" type="text/css" href="/static/diyUpload/css/diyUpload.css">
+<script type="text/javascript" src="/static/diyUpload/js/webuploader.html5only.min.js"></script>
+<script type="text/javascript" src="/static/diyUpload/js/diyUpload.js"></script>
+
+
 <div class="container-fluid">
     <div class="row">
-
         <div class="panel panel-default">
             <div class="panel-heading">
-                修改分类
+                修改商品
             </div>
             <div class="panel-body">
-                <div class="table-responsive input-form">
-                    <form action="/admin/goodsCate/doEdit" method="post" enctype="multipart/form-data">
-                        <ul>
+                <div class="table-responsive goods-content input-form">
+                    <form action="/admin/goods/doEdit" method="post" enctype="multipart/form-data">
 
-                            <input type="hidden" name="id"  value="{{.goodsCate.Id}}">
-                            
-                            <li> <span>分类名称:</span> <input type="text" name="title" class="input" value="{{.goodsCate.Title}}" /></li>
-
-                            <li> <span>上级分类:</span>
-                                {{$pid := .goodsCate.Pid}}
-                                <select name="pid" id="pid">
-                                    <option value="0">顶级分类</option>
-                                    {{range $key,$value := .goodsCateList}}     
-                                         {{if eq $pid $value.Id}}                               
-                                             <option selected value="{{$value.Id}}">{{$value.Title}}</option>
-                                         {{else}}
-                                             <option value="{{$value.Id}}">{{$value.Title}}</option>
-                                         {{end}}
-                                    {{end}}
-                                </select>
-                            </li>  
-        
-                            <li> <span>分类图片:</span>  <input type="file" name="cate_img"/></li>       
-                            
-                            {{if ne .goodsCate.CateImg ""}}
-                                 <img src="/{{.goodsCate.CateImg}}" width="200" />
-                            {{end}}
-        
-                            <li>  <span>跳转地址:</span>  <input type="text" name="link" class="input" value="{{.goodsCate.Link}}"/></li> 
-        
-                            <li>  <span>分类模板:</span> <input type="text" name="template" class="input" value="{{.goodsCate.Template}}"/><span>空表示默认模板</span></li>
-        
-                            <li>  <span>Seo标题:</span> <input type="text" name="sub_title" class="input" value="{{.goodsCate.SubTitle}}"/></li>
-        
-                            <li>  <span>Seo关键词: </span><input type="text" name="keywords" class="input" value="{{.goodsCate.Keywords}}"/></li>
-        
-                            <li>  <span>Seo描述:</span> <textarea name="description" id="description" cols="84" rows="4">{{.goodsCate.Description}}</textarea></li>                   
-
-                            <li>  <span>排　　序:</span> <input type="text" name="sort" value="{{.goodsCate.Sort}}"/></li>       
-                            
-                            <li>  <span>状　　态:</span> 
-                                <input type="radio" name="status" {{if eq .goodsCate.Status 1}}checked{{end}} value="1" id="a"/> <label for="a">显示</label>   
-                                
-                                <input type="radio" name="status"  {{if eq .goodsCate.Status 0}}checked{{end}} value="0" id="b"/><label for="b">隐藏</label> 　</li>
-                            
-        
-
-                            <li>
-                                <br/>
-                                <button type="submit" class="btn btn-primary">提交</button>
-                            </li>
-
+                        <!-- Nav tabs -->
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li role="presentation" class="active"><a href="#general" role="tab"
+                                    data-toggle="tab">通用信息</a></li>
+                            <li role="presentation"><a href="#detail" role="tab" data-toggle="tab">详细描述</a></li>
+                            <li role="presentation"><a href="#mix" role="tab" data-toggle="tab">商品属性</a></li>
+                            <li role="presentation"><a href="#attribute" role="tab" data-toggle="tab">规格与包装</a></li>
+                            <li role="presentation"><a href="#photo" role="tab" data-toggle="tab">商品相册</a></li>
                         </ul>
 
+                        <!-- Tab panes -->
+                        <div class="tab-content">
+                            <div role="tabpanel" class="tab-pane active" id="general">
 
+                                <ul class="form_input">
+                                    <li> <span> 商品标题:</span> <input type="text" name="title" class="input"
+                                        value="{{.goods.Title}}" /></li>
+                                    <li> <span> 附属标题:</span> <input type="text" name="sub_title" class="input"
+                                            value="{{.goods.SubTitle}}" /></li>
+                                    <li> <span> 商品版本:</span> <input type="text" name="goods_version" class="input"
+                                            value="{{.goods.GoodsVersion}}" />
+                                    </li>
+                                    <li> <span>所属分类:</span>
+                                        <select name="cate_id" id="cid">
+                                            {{$cateId := .goods.CateId}}
+                                            {{range $key,$value := .goodsCateList}}
+                                                <option  {{if eq $cateId $value.Id}}selected{{end}} value="{{$value.Id}}" >{{$value.Title}}</option>
+                                                {{range $k,$v := $value.GoodsCateItems}}
+                                                     <option {{if eq $cateId $v.Id}}selected{{end}} value="{{$v.Id}}"> ----{{$v.Title}}</option>
+                                                {{end}}
+                                            {{end}}
+                                        </select>
+                                    </li>
+                                    <li> <span> 商品图片:</span> 
+                                        <input type="file" name="goods_img" />
+                                        {{if ne .goods.GoodsImg ""}}
+                                            <img src="/{{.goods.GoodsImg}}" width="80"/>
+                                        {{end}}
+                                    </li>
+                                  
+                                    <li> <span>商品价格:</span> <input type="text" name="price" value="{{.goods.Price}}"/></li>
+                                    <li> <span>商品原价:</span> <input type="text" name="market_price"  value="{{.goods.MarketPrice}}" /></li>
+                                    <li> <span>商品库存:</span> <input type="text" name="goods_number" value="{{.goods.GoodsNumber}}" /></li>
+                                    <li> <span>商品排序:</span> <input type="text" name="sort" value="{{.goods.Sort}}"/></li>
+
+                                    <li> <span>商品状态:</span> 
+                                        <input type="radio" value="1" {{if eq .goods.Status 1}}checked{{end}} name="status" checked /> 显示
+                                        <input type="radio" value="0" {{if eq .goods.Status 0}}checked{{end}} name="status" /> 隐藏
+                                    </li>
+
+                                    <li> <span>加入推荐:</span>
+                                        <input type="checkbox" value="1" name="is_best" {{if eq .goods.IsBest 1}}checked{{end}}/> 精品
+                                        <input type="checkbox" value="1" name="is_hot" {{if eq .goods.IsHot 1}}checked{{end}}/> 热销
+                                        <input type="checkbox" value="1" name="is_new" {{if eq .goods.IsNew 1}}checked{{end}} /> 新品
+                                    </li>
+                                </ul>
+
+                            </div>
+                            <div role="tabpanel" class="tab-pane" id="detail">
+
+                                <textarea name="goods_content" id="content" cols="100" rows="8">{{.goods.GoodsContent}}</textarea>
+
+                            </div>
+                            <div role="tabpanel" class="tab-pane" id="mix">
+
+                                <ul class="form_input">
+
+                                    <li> <span>商品颜色:</span>
+
+                                        {{range $key,$value := .goodsColorList}}
+                                        <input type="checkbox" {{if eq $value.Checked true}}checked{{end}} value="{{$value.Id}}" name="goods_color"
+                                            id="color_{{$value.Id}}" />
+                                        <label for="color_{{$value.Id}}">{{$value.ColorName}}</label>
+                                        &nbsp;
+                                        {{end}}
+
+                                    </li>
+
+                                    <li> <span>关联商品:</span>
+
+                                        <input type="text" name="relation_goods" class="relation_goods" value="{{.goods.RelationGoods}}"/> <i>填写关联商品的id
+                                            多个以逗号隔开 格式：23,24,39</i>
+
+                                    </li>
+
+                                    <li> <span>关联赠品:</span>
+
+                                        <input type="text" name="goods_gift" class="goods_gift" value="{{.goods.GoodsGift}}"/> <i>可为空 格式：23-2,39-5
+                                            说明：例如23-2 中的23表示商品id,2表示商品数量</i>
+
+                                    </li>
+                                    <li> <span>关联配件:</span>
+
+                                        <input type="text" name="goods_fitting" class="goods_fitting" value="{{.goods.GoodsFitting}}" /> <i>可为空
+                                            格式：23-2,39-5 说明：例如23-2 中的23表示商品id,2表示商品数量</i>
+
+                                    </li>
+
+
+                                    <li> <span>更多属性:</span>
+
+                                        <input type="text" name="goods_attr" class="goods_attr" value="{{.goods.GoodsAttr}}" /> <i> 格式: 颜色:红色,白色,黄色 |
+                                            尺寸:41,42,43</i>
+
+                                    </li>
+
+                                    <li> <span>Seo关键词:</span>
+                                                    
+                                        <input type="text" name="goods_keywords" class="input" value="{{.goods.GoodsKeywords}}" />  
+                                    
+                                    </li>
+
+                                    <li> <span>Seo描述:</span>                                                
+                                        <textarea name="goods_desc" id="goods_desc" cols="100" rows="2">{{.goods.GoodsDesc}}</textarea>
+                                    
+                                    </li>
+
+
+
+
+                                </ul>
+                            </div>
+                            <div role="tabpanel" class="tab-pane" id="attribute">
+
+                                <ul class="form_input">
+
+                                    <li> <span>商品类型:　</span>
+                                        <select name="goods_type_id" id="goods_type_id">
+                                            <option value="0">--请选择商品类型--</option>
+                                            {{$goodsTypeId := .goods.GoodsTypeId}}
+                                            {{range $key,$value := .goodsTypeList}}
+                                             <option  {{if eq $value.Id $goodsTypeId}}selected{{end}} value="{{$value.Id}}">{{$value.Title}}</option>
+                                            {{end}}
+                                        </select>
+
+                                    </li>
+
+                                </ul>
+
+                                <ul class="form_input" id="goods_type_attribute">
+                                    <!-- 这里需要将string类型转化为Html -->
+                                    {{.goodsAttrStr | Str2Html}}
+                                </ul>
+
+                            </div>
+                            <div role="tabpanel" class="tab-pane" id="photo">
+
+                                <div id="photoUploader"></div>
+                                <div id="photoList">
+                                    <ul id="goods_image_list" class="goods_image_list clear">
+
+                                        {{range $key,$value := .goodsImageList}}
+                                            <li>
+                                                <img  src="{{$value.ImgUrl}}" class="pic" />                                            
+                                            </li>
+                                        {{end}}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <br />
+                        <button type="submit" class="btn btn-primary">提交</button>
                     </form>
                 </div>
             </div>
@@ -72,8 +193,65 @@
 
     </div>
 </div>
+<script>
+    new FroalaEditor('#content', {
+        height: 300,
+        language: 'zh_cn',  //要使用语言包首先需要引入 ，还要注意下划线
+        // toolbarButtons: [ ['undo', 'redo'], ['bold', 'italic', 'underline', 'strikethrough', 'subscript', 'superscript', 'outdent', 'indent', 'clearFormatting', 'insertTable', 'html'] ],
+        // toolbarButtonsXS: [ ['undo', 'redo'], ['bold', 'italic', 'underline'] ]
+        imageUploadURL: '/admin/goods/imageUpload'
+    });
+    //获取商品类型属性
+    $(function () {
+        $("#goods_type_id").change(function () {
+            var cateId = $(this).val()
 
+            $.get("/admin/goods/goodsTypeAttribute", { "cateId": cateId }, function (response) {
+                console.log(response)
+                var str = ""
+                if (response.success) {
+                    var attrData = response.result;
+                    for (var i = 0; i < attrData.length; i++) {
+                        if (attrData[i].attr_type == 1) {
+                            str += '<li><span>' + attrData[i].title + ': 　</span> <input type="hidden" name="attr_id_list" value="' + attrData[i].id + '" />   <input type="text" name="attr_value_list" /></li>'
+                        } else if (attrData[i].attr_type == 2) {
+                            str += '<li><span>' + attrData[i].title + ': 　</span> <input type="hidden" name="attr_id_list" value="' + attrData[i].id + '">  <textarea cols="50" rows="3" name="attr_value_list"></textarea></li>'
+                        } else {
+                            var attrArray = attrData[i].attr_value.split("\n")
+                            str += '<li><span>' + attrData[i].title + ': 　</span>  <input type="hidden" name="attr_id_list" value="' + attrData[i].id + '" />';
+                            str += '<select name="attr_value_list">'
+                            for (var j = 0; j < attrArray.length; j++) {
+                                str += '<option value="' + attrArray[j] + '">' + attrArray[j] + '</option>';
+                            }
+                            str += '</select>'
+                            str += '</li>'
+                        }
+                    }
+                    $("#goods_type_attribute").html(str);
+                }
+
+
+            })
+        })
+    })
+
+    //批量上传图片
+    $(function () {
+        $('#photoUploader').diyUpload({
+            url: '/admin/goods/imageUpload',
+            success: function (response) {
+                // console.info( data );
+                var photoStr = '<input type="hidden" name="goods_image_list" value=' + response.link + ' />';
+                $("#photoList").append(photoStr)
+            },
+            error: function (err) {
+                console.info(err);
+            }
+        });
+
+    })
+</script>
 </body>
-</html>
 
+</html>
 {{end}}

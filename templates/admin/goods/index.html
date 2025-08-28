@@ -12,71 +12,76 @@
             -->
             <div class="table-responsive">
                 <table class="table table-bordered">
-                    <thead>
-                        <tr class="th">
-                            <th>分类名称</th>
-                            <th>分类图片</th>
-                            <th class="text-center">排序</th>
-                            <th class="text-center">状态</th>
-                            <th class="text-center">操作</th>
-                        </tr>
+                    <thead>                                   
+                    <tr class="th">
+                        <th>商品名称</th>
+                        <th>价格</th>
+                        <th>原价</th>  
+                        <th>点击量</th>
+                        <th>上架</th>
+                        <th>精品</th>
+                        <th>新品</th>
+                        <th>热销</th>
+                        <th>排序</th>
+                        <th>库存</th>                             
+                        <th class="text-center">操作</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        {{range $key,$value := .goodsCateList}}                                   
-                      
-                            <tr>
-                                <td>{{$value.Title}}</td>
-
-                                <td></td>
+                        {{range $key,$value := .goodsList}}
+        
+                        <tr>                        
+                                <td>{{$value.Title}}</td>                        
+                                <td>{{$value.Price}}</td>
+                                <td>{{$value.MarketPrice}}</td>  
+                                <td>{{$value.ClickCount}}</td>      
                                 
-                                <td><span class="chSpanNum" data-id="{{$value.Id}}" data-table="goods_cate" data-field="sort">{{$value.Sort}}</span></td>
-
                                 <td class="text-center">
                                     {{if eq $value.Status 1}}                              
-                                        <img src="/static/admin/images/yes.gif"  class="chStatus" data-id="{{$value.Id}}" data-table="goods_cate" data-field="status" />
+                                         <img class="chStatus" src="/static/admin/images/yes.gif" data-id="{{$value.Id}}" data-table="goods" data-field="status"/>
                                     {{else}}
-                                            <img src="/static/admin/images/no.gif"  class="chStatus" data-id="{{$value.Id}}" data-table="goods_cate" data-field="status" />
+                                         <img class="chStatus" src="/static/admin/images/no.gif" data-id="{{$value.Id}}" data-table="goods" data-field="status" />
                                     {{end}}
-            
-                                </td>                                                                    
-                                <td class="text-center">　
+                                 </td>                                              
+                                
+                                <td  class="text-center">                            
+                                    {{if eq $value.IsBest 1}}                              
+                                        <img class="chStatus" src="/static/admin/images/yes.gif" data-id="{{$value.Id}}" data-table="goods" data-field="is_best"/>
+                                    {{else}}
+                                            <img class="chStatus" src="/static/admin/images/no.gif" data-id="{{$value.Id}}" data-table="goods" data-field="is_best" />
+                                    {{end}}
+                                </td> 
+                                
+                                <td  class="text-center">
+                                    {{if eq $value.IsNew 1}}                              
+                                        <img class="chStatus" src="/static/admin/images/yes.gif" data-id="{{$value.Id}}" data-table="goods" data-field="is_new"/>
+                                    {{else}}
+                                            <img class="chStatus" src="/static/admin/images/no.gif" data-id="{{$value.Id}}" data-table="goods" data-field="is_new" />
+                                    {{end}}
+                                </td> 
+        
+                                <td  class="text-center"> 
+                                    {{if eq $value.IsHot 1}}                              
+                                        <img class="chStatus" src="/static/admin/images/yes.gif" data-id="{{$value.Id}}" data-table="goods" data-field="is_hot"/>
+                                    {{else}}
+                                            <img class="chStatus" src="/static/admin/images/no.gif" data-id="{{$value.Id}}" data-table="goods" data-field="is_hot" />
+                                    {{end}}
+                                </td> 
+        
+                                <td class="text-center">                            
+                                    <span class="chSpanNum" data-id="{{$value.Id}}" data-table="goods" data-field="sort">{{$value.Sort}}</span>                        
+                                </td>
+        
+                                <td class="text-center">                            
+                                    <span class="chSpanNum" data-id="{{$value.Id}}" data-table="goods" data-field="goods_number">{{$value.GoodsNumber}}</span>                                                    
+                                </td>
+        
+                                <td class="text-center">
                                     <a href="/admin/goods/edit?id={{$value.Id}}" />修改</a> 　
-                                    <a class="delete" href="/admin/goods/delete?id={{$value.Id}}" />删除</a>
+                                    <a class="delete" href="/admin/goods/delete?id={{$value.Id}}" />删除</a>                          
                                 </td>
-                            </tr>
-                            {{range $k,$v := $value.GoodsCateItems}}                
-                            <tr>
-                                <td>　　----{{$v.Title}}</td>
-
-                                <td>
-                                    <img src="/{{$v.CateImg}}" width="80" />
-                                </td>
-
-                                <td class="text-center">
-                                    
-                                    <span class="chSpanNum" data-id="{{$v.Id}}" data-table="goods_cate" data-field="sort" data-num="{{$v.Sort}}">{{$v.Sort}}</span>
-                                
-                                
-                                </td>
-                                <td class="text-center">
-
-                                    {{if eq $v.Status 1}}                              
-                                        <img src="/static/admin/images/yes.gif"  class="chStatus" data-id="{{$v.Id}}" data-table="goods_cate" data-field="status" />
-                                    {{else}}
-                                            <img src="/static/admin/images/no.gif"  class="chStatus" data-id="{{$v.Id}}" data-table="goods_cate" data-field="status" />
-                                    {{end}}
-                
-                
-                                </td>                                                                    
-                                <td class="text-center">　
-                                    <a href="/admin/goods/edit?id={{$v.Id}}" />修改</a> 　
-                                    <a class="delete" href="/admin/goods/delete?id={{$v.Id}}" />删除</a>
-                                </td>
-                            </tr>
-                            {{end}}
-            
-
-                     {{end}}
+                            </tr>       
+                        {{end}}
                     </tbody>
                 </table>
             </div>

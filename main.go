@@ -2,6 +2,7 @@ package main
 
 // 单引号字符，双引号字符串
 import (
+	"go_demo/models"
 	"go_demo/routers"
 	"text/template"
 	"time"
@@ -31,16 +32,17 @@ func main() {
 	r.Static("/static", "./static")
 	store := cookie.NewStore([]byte("secret111"))
 	store.Options(sessions.Options{
-		Path:   "/",
-		MaxAge: 3600,   // Cookie 有效期（秒）
+		Path:     "/",
+		MaxAge:   3600, // Cookie 有效期（秒）
 		HttpOnly: true,
 		// Domain: "10.100.233.37", //  指定域名
-	})  
+	})
 	r.Use(sessions.Sessions("mysession", store))
 
-	//自定义模板函数
+	//自定义模板函数 html中用到的函数
 	r.SetFuncMap(template.FuncMap{
 		"UnixToTime": UnixToTime,
+		"Str2Html":   models.Str2Html,
 	})
 	r.LoadHTMLGlob("templates/**/**/*")
 

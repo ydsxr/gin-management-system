@@ -5,6 +5,7 @@ type GoodsColor struct {
 	ColorName  string
 	ColorValue string
 	Status     int
+	Checked    bool `gorm:"-"`
 }
 
 func (GoodsColor) TableName() string {

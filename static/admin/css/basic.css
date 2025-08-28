@@ -1,0 +1,111 @@
+ul{
+    list-style-type: none;
+    margin: 0px;
+    padding: 0px;
+}
+
+.aside h4{
+	margin-top: 0px;
+	font-size: 15px;
+	cursor: pointer;
+	
+	position: relative;
+    display: block;
+    padding: 10px 15px;
+    margin-bottom: -1px;    
+    color: #fff;
+    background-color: #428bca;
+    border-color: #428bca;
+    
+    border-bottom: 2px solid #3a82bf;
+}
+
+.aside .list-group-item:first-child{
+
+	border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+}
+
+.aside .list-group-item:last-child{
+	
+	border-bottom-right-radius: 0px;
+    border-bottom-left-radius: 0px;
+}
+
+
+
+.aside .list-group-item a{
+	
+	display: inline-block;
+	width: 100%;
+	text-indent: 10px;
+	color: #555
+}
+
+
+
+.navbar-header{   
+    text-align: center;
+}
+.navbar-inverse .navbar-nav>li>a{
+    color:#f9f9f9;
+}
+.navbar-inverse{
+    background:#46473F;
+}
+
+
+table .th{
+	
+	background: #EEEEEE;
+}
+
+ .input-form li{
+    margin: 5px 0px;
+}
+
+input[type=file]{
+ 	display: inline !important;
+
+}
+
+
+.col-sm-2,.col-sm-10{
+	padding-left: 0px;
+}
+
+
+.navbar{
+	border-radius: 0px;
+}
+.logo{
+	height:48px;
+}
+
+/* 商品详情页面布局 */
+.tab-content{
+    position: relative;
+    top: -6px;
+    background: #fff;
+    padding: 20px;
+}
+.input-form{
+    padding: 0px 0px;
+}
+.input-form li input[type="text"],.input-form li input[type="password"]{
+    width: 300px;
+}
+.nav-tabs{
+    background: #eee;
+    padding-left: 10px;
+}
+.goods-content{
+    border: 1px solid #eee;
+}
+/* webuploader按钮失效解决方案 */
+#photoUploader div:nth-child(2){width:100%!important;height:100%!important;}   
+.input-form li span{
+    display: inline-block;
+    min-width: 90px;
+    text-align: center;
+}

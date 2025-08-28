@@ -1,0 +1,80 @@
+{{ define "admin/access/index.html" }}
+{{ template "admin/public/page_header.html" .}}
+           
+    <!--
+        列表展示
+    -->
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead>
+            <tr class="th">
+                <th>模块名称</th>
+                <th>节点类型</th>
+                <th>操作名称</th>
+                <th>操作地址</th>
+                <th>排序</th>
+                <th>描述</th>
+               
+                <th class="text-center">操作</th>
+            </tr>
+            </thead>
+            <tbody>
+
+
+            {{range $key,$value:= .accessList}}
+            <tr>
+                <td>{{$value.ModuleName}}</td>
+                <td>
+                    {{if eq $value.Type 1}}
+                    一级节点 模块
+                    {{else if eq $value.Type 2}}
+                    二级节点 菜单
+                    {{else}}
+                    三级节点 操作
+                    {{end}}
+                </td>
+                <td>{{$value.ActionName}}</td>
+                <td>{{$value.Url}}</td>
+                <td>
+                    <span class="chSpanNum" data-id="{{$value.Id}}" data-table="access" data-field="sort" > {{$value.Sort}} </span>
+                </td>
+                <td>{{$value.Description}}</td>
+                <td class="text-center">
+                    <a href="/admin/access/edit?id={{$value.Id}}">修改</a> 
+                    <a class="delete" href="/admin/access/delete?id={{$value.Id}}">删除</a> 
+                </td>
+            </tr>
+                    {{range $k,$v:= $value.AccessItem}}
+                    <tr>
+                        <td> --{{$v.ModuleName}}</td>
+                        <td>
+                            {{if eq $v.Type 1}}
+                            一级节点 模块
+                            {{else if eq $v.Type 2}}
+                            二级节点 菜单
+                            {{else}}
+                            三级节点 操作
+                            {{end}}
+                        </td>
+                        <td>{{$v.ActionName}}</td>
+                        <td>{{$v.Url}}</td>
+                        <td>
+                            <span class="chSpanNum" data-id="{{$v.Id}}" data-table="access" data-field="sort" > {{$v.Sort}} </span>
+                        </td>
+                        <td>{{$v.Description}}</td>
+                        <td class="text-center">
+                            <a href="/admin/access/edit?id={{$v.Id}}">修改</a> 
+                            <a class="delete" href="/admin/access/delete?id={{$v.Id}}">删除</a> 
+                        </td>
+                    </tr>
+                    {{end}}
+            {{end}}
+
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>
+
+{{end}}

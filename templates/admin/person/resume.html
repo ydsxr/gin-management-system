@@ -1,0 +1,20 @@
+
+{{ define "admin/person/resume.html" }}
+
+{{ template "admin/public/page_header.html" .}}
+
+<!--
+    简历展示
+-->
+<div>
+    <object data="{{.person.ResumeUrl}}" type="application/pdf" width="100%" height="600px">
+        <p>您的浏览器不支持PDF预览，请
+            <a href="{{.person.ResumeUrl}}" target="_blank">点击这里下载简历</a>。
+        </p>
+    </object>
+</div>
+
+</body>
+</html>
+
+{{end}}

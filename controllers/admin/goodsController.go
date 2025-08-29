@@ -74,12 +74,12 @@ func (con GoodsController) GoodsTypeAttribute(c *gin.Context) {
 	}
 }
 func (con GoodsController) DoAdd(c *gin.Context) {
+	// 记录goods的表有三张：goods、goods_attr、goods_image，删除数据要同步删除
 	//1、获取表单提交过来的数据
 	title := c.PostForm("title")
 	subTitle := c.PostForm("sub_title")
 	// goodsSn := c.PostForm("goods_sn")
 	cateId, err1 := models.Int(c.PostForm("cate_id"))
-	// goodsNumber, err2 := models.Int(c.PostForm("goods_number"))
 	//注意小数点
 	marketPrice, _ := models.Float(c.PostForm("market_price"))
 	price, _ := models.Float(c.PostForm("price"))
@@ -98,13 +98,11 @@ func (con GoodsController) DoAdd(c *gin.Context) {
 	isBest, _ := models.Int(c.PostForm("is_best"))
 	isNew, _ := models.Int(c.PostForm("is_new"))
 	goodsTypeId, err2 := models.Int(c.PostForm("goods_type_id"))
-	//sort, err10 := models.Int(c.PostForm("sort"))//
+	sort, err10 := models.Int(c.PostForm("sort"))
+	goodsNumber, err := models.Int(c.PostForm("goods_number"))
 	status, err3 := models.Int(c.PostForm("status"))
 	addTime := int(models.GetUnix())
-	if err1 != nil || err2 != nil || err3 != nil {
-		fmt.Println("错误1", err1)
-		fmt.Println("错误2", err2)
-		fmt.Println("错误3", err3)
+	if err1 != nil || err2 != nil || err3 != nil || err10 != nil || err != nil {
 		con.Error(c, "获取数据失败", "/admin/goods/add")
 		return
 	}
@@ -118,9 +116,9 @@ func (con GoodsController) DoAdd(c *gin.Context) {
 		Title:    title,
 		SubTitle: subTitle,
 		// GoodsSn:       goodsSn,
-		CateId:     cateId,
-		ClickCount: 100,
-		// GoodsNumber:   goodsNumber,
+		CateId:        cateId,
+		ClickCount:    100,
+		GoodsNumber:   goodsNumber,
 		MarketPrice:   marketPrice,
 		Price:         price,
 		RelationGoods: relationGoods,
@@ -136,11 +134,11 @@ func (con GoodsController) DoAdd(c *gin.Context) {
 		IsBest:      isBest,
 		IsNew:       isNew,
 		GoodsTypeId: goodsTypeId,
-		//Sort:          sort,
-		Status:     status,
-		AddTime:    addTime,
-		GoodsColor: goodsColorStr,
-		GoodsImg:   goodsImg,
+		Sort:        sort,
+		Status:      status,
+		AddTime:     addTime,
+		GoodsColor:  goodsColorStr,
+		GoodsImg:    goodsImg,
 	}
 	err4 := models.DB.Create(&goods).Error
 	if err4 != nil {
@@ -235,18 +233,19 @@ func (con GoodsController) Edit(c *gin.Context) {
 	models.DB.Where("goods_id=?", goods.Id).Find(&goodsAttrList)
 	goodsAttrStr := ""
 	for _, v := range goodsAttrList {
-		if v.AttributeType == 1 {
+		switch v.AttributeType {
+		case 1:
 			goodsAttrStr += fmt.Sprintf(`<li><span>%v: </span> <input type="hidden" name="attr_id_list" value="%v" />   <input type="text" name="attr_value_list" value="%v" /></li>`, v.AttributeTitle, v.AttributeId, v.AttributeValue)
-		} else if v.AttributeType == 2 {
+		case 2:
 			goodsAttrStr += fmt.Sprintf(`<li><span>%v: </span><input type="hidden" name="attr_id_list" value="%v" />  <textarea cols="50" rows="3" name="attr_value_list">%v</textarea></li>`, v.AttributeTitle, v.AttributeId, v.AttributeValue)
-		} else {
+		default:
 			//获取当前类型对应的值
 			goodsTypeArttribute := models.GoodsTypeAttribute{Id: v.AttributeId}
 			models.DB.Find(&goodsTypeArttribute)
 			attrValueSlice := strings.Split(goodsTypeArttribute.AttrValue, "\n")
 
 			goodsAttrStr += fmt.Sprintf(`<li><span>%v: </span>  <input type="hidden" name="attr_id_list" value="%v" /> `, v.AttributeTitle, v.AttributeId)
-			goodsAttrStr += fmt.Sprintf(`<select name="attr_value_list">`)
+			goodsAttrStr += `<select name="attr_value_list">`
 			for i := 0; i < len(attrValueSlice); i++ {
 				if attrValueSlice[i] == v.AttributeValue {
 					goodsAttrStr += fmt.Sprintf(`<option value="%v" selected >%v</option>`, attrValueSlice[i], attrValueSlice[i])
@@ -254,9 +253,8 @@ func (con GoodsController) Edit(c *gin.Context) {
 					goodsAttrStr += fmt.Sprintf(`<option value="%v">%v</option>`, attrValueSlice[i], attrValueSlice[i])
 				}
 			}
-			goodsAttrStr += fmt.Sprintf(`</select>`)
-			goodsAttrStr += fmt.Sprintf(`</li>`)
-
+			goodsAttrStr += `</select>`
+			goodsAttrStr += `</li>`
 		}
 	}
 
@@ -267,8 +265,8 @@ func (con GoodsController) Edit(c *gin.Context) {
 		"goodsCateList":  goodsCateList,
 		"goodsColorList": goodsColorList,
 		"goodsTypeList":  goodsTypeList,
-		"goodsAttrStr":  goodsAttrStr,
-		"goodsImageList":goodsImageList,
+		"goodsAttrStr":   goodsAttrStr,
+		"goodsImageList": goodsImageList,
 	})
 }
 func (con GoodsController) DoEdit(c *gin.Context) {

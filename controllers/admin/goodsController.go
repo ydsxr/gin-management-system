@@ -270,6 +270,138 @@ func (con GoodsController) Edit(c *gin.Context) {
 	})
 }
 func (con GoodsController) DoEdit(c *gin.Context) {
+	// 记录goods的表有三张：goods、goods_attr、goods_image，删除数据要同步删除
+	//1、获取表单提交过来的数据
+	id, err1 := models.Int(c.PostForm("id"))
+	if err1 != nil {
+		con.Error(c, "获取ID失败", "/admin/goods")
+		return
+	}
+	title := c.PostForm("title")
+	subTitle := c.PostForm("sub_title")
+	// goodsSn := c.PostForm("goods_sn")
+	cateId, err2 := models.Int(c.PostForm("cate_id"))
+	//注意小数点
+	marketPrice, _ := models.Float(c.PostForm("market_price"))
+	price, _ := models.Float(c.PostForm("price"))
+	relationGoods := c.PostForm("relation_goods")
+	goodsAttr := c.PostForm("goods_attr")
+	goodsVersion := c.PostForm("goods_version")
+	goodsGift := c.PostForm("goods_gift")
+	goodsFitting := c.PostForm("goods_fitting")
+	//获取的是切片
+	goodsColorArr := c.PostFormArray("goods_color")
+	goodsKeywords := c.PostForm("goods_keywords")
+	goodsDesc := c.PostForm("goods_desc")
+	goodsContent := c.PostForm("goods_content")
+	//isDelete, err5 := models.Int(c.PostForm("is_delete"))//
+	isHot, _ := models.Int(c.PostForm("is_hot"))
+	isBest, _ := models.Int(c.PostForm("is_best"))
+	isNew, _ := models.Int(c.PostForm("is_new"))
+	goodsTypeId, err3 := models.Int(c.PostForm("goods_type_id"))
+	sort, err4 := models.Int(c.PostForm("sort"))
+	goodsNumber, err5 := models.Int(c.PostForm("goods_number"))
+	status, err6 := models.Int(c.PostForm("status"))
+	addTime := int(models.GetUnix())
+	if err2 != nil || err3 != nil || err4 != nil || err5 != nil || err6 != nil {
+		con.Error(c, "获取数据失败", "/admin/goods/add")
+		return
+	}
+	//2、获取颜色信息 把颜色转化为字符串
+	goodsColorStr := strings.Join(goodsColorArr, ",") //把切片里的放在一起
+
+	//3、修改数据
+	goods := models.Goods{Id: id}
+	models.DB.Find(&goods)
+	goods.Title = title
+	goods.SubTitle = subTitle
+	// GoodsSn:       goodsSn,
+	goods.CateId = cateId
+	goods.ClickCount = 100
+	goods.GoodsNumber = goodsNumber
+	goods.MarketPrice = marketPrice
+	goods.Price = price
+	goods.RelationGoods = relationGoods
+	goods.GoodsAttr = goodsAttr
+	goods.GoodsVersion = goodsVersion
+	goods.GoodsGift = goodsGift
+	goods.GoodsFitting = goodsFitting
+	goods.GoodsKeywords = goodsKeywords
+	goods.GoodsDesc = goodsDesc
+	goods.GoodsContent = goodsContent
+	//IsDelete:      isDelete,
+	goods.IsHot = isHot
+	goods.IsBest = isBest
+	goods.IsNew = isNew
+	goods.GoodsTypeId = goodsTypeId
+	goods.Sort = sort
+	goods.Status = status
+	goods.AddTime = addTime
+	goods.GoodsColor = goodsColorStr
+
+	//4、上传图片 生成缩略图
+	goodsImg, err7 := models.UploadImg(c, "goods_img")
+	if err7 == nil && len(goodsImg) > 0 {
+		goods.GoodsImg = goodsImg
+	}
+	//5、执行修改
+	err8 := models.DB.Save(&goods).Error
+	if err8 != nil {
+		con.Error(c, "修改商品失败", "/admin/goods/edit?id="+models.String(id))
+		return
+	}
+	//6、修改图库信息 增加图库信息
+	wg.Add(1)
+	go func() {
+		goodsImageList := c.PostFormArray("goods_image_list")
+		for _, v := range goodsImageList {
+			goodsImgObj := models.GoodsImage{}
+			goodsImgObj.GoodsId = goods.Id
+			goodsImgObj.ImgUrl = v
+			goodsImgObj.Sort = 10
+			goodsImgObj.Status = 1
+			goodsImgObj.AddTime = int(models.GetUnix())
+			models.DB.Create(&goodsImgObj)
+		}
+		wg.Done() // 标记减一
+	}()
+	//7、修改规格包装 attrIdList和attrValueList一一对应
+	//删除当前商品下面的规格包装
+	goodsAttrObj := models.GoodsAttr{}
+	models.DB.Where("goods_id=?", goods.Id).Delete(&goodsAttrObj)
+	//重新执行增加
+	wg.Add(1)
+	go func() {
+		attrIdList := c.PostFormArray("attr_id_list")
+		attrValueList := c.PostFormArray("attr_value_list")
+		for i := 0; i < len(attrIdList); i++ {
+			goodsTypeAttributeId, errAttributeId := models.Int(attrIdList[i])
+			fmt.Println("商品属性Id:", goodsTypeAttributeId)
+			if errAttributeId != nil {
+				con.Error(c, "获取商品类型错误", "/admin/goods/add")
+				return
+			}
+			// 获取商品类型属性的数据
+			goodsTypeAttributeObj := models.GoodsTypeAttribute{Id: goodsTypeAttributeId}
+			models.DB.Find(&goodsTypeAttributeObj)
+
+			// 给商品属性里面增加数据 规格包装
+			goodsAttrObj := models.GoodsAttr{}
+			goodsAttrObj.GoodsId = goods.Id
+			goodsAttrObj.AttributeTitle = goodsTypeAttributeObj.Title
+			goodsAttrObj.AttributeType = goodsTypeAttributeObj.AttrType
+			goodsAttrObj.AttributeId = goodsTypeAttributeObj.Id
+			goodsAttrObj.AttributeCateId = goodsTypeAttributeObj.CateId
+			goodsAttrObj.AttributeValue = attrValueList[i]
+			goodsAttrObj.Status = 1
+			goodsAttrObj.Sort = 10
+			goodsAttrObj.AddTime = int(models.GetUnix())
+			models.DB.Create(&goodsAttrObj)
+		}
+		wg.Done() // 标记减一
+	}()
+	wg.Wait() // 标记为0时开始往下执行
+	con.Success(c, "修改商品成功", "/admin/goods")
 
 }
 func (con GoodsController) Delete(c *gin.Context) {

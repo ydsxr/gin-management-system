@@ -20,7 +20,7 @@
             <div class="panel-body">
                 <div class="table-responsive goods-content input-form">
                     <form action="/admin/goods/doEdit" method="post" enctype="multipart/form-data">
-
+                        <input type="hidden" name="id" class="input" value="{{.goods.Id}}">
                         <!-- Nav tabs -->
                         <ul class="nav nav-tabs" role="tablist">
                             <li role="presentation" class="active"><a href="#general" role="tab"

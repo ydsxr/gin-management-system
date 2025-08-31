@@ -7,9 +7,10 @@ ul{
 .aside h4{
 	margin-top: 0px;
 	font-size: 15px;
-	cursor: pointer;
-	
+    /* 鼠标悬停时变成手型，表示可点击 */
+	cursor: pointer; 
 	position: relative;
+    /* 占满整行 */
     display: block;
     padding: 10px 15px;
     margin-bottom: -1px;    
@@ -113,13 +114,36 @@ input[type=file]{
     border:1px solid #eee;
 
 }
+.goods_image_list::after {
+    content: "";
+    display: block;
+    clear: both;
+}
 .goods_image_list li{
     width:  120px;   
     float: left;    
-    margin-right: 10px;
+    margin-right: 20px;
     border-bottom: none;
     position: relative;
+    text-align: center;
 }
 .goods_image_list li img{
     width:  120px;   
+}
+/*修改图库的布局*/
+.goods_image_list li .color_list{
+    margin-top: 20px;
+}
+.goods_image_list li .goods_image_delete{
+    width: 40px;
+    height: 40px;
+    position:absolute;
+    background: url('/static/diyUpload/images/x_alt.png') no-repeat center center;
+    top: -20px;
+    right: -25px;
+    cursor: pointer;
+}
+#photoUploader{
+    margin: 20px auto;
+    width: 200px;
 }

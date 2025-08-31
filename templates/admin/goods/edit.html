@@ -167,18 +167,28 @@
 
                             </div>
                             <div role="tabpanel" class="tab-pane" id="photo">
-
-                                <div id="photoUploader"></div>
                                 <div id="photoList">
                                     <ul id="goods_image_list" class="goods_image_list clear">
-
+                                        {{$goodsColor:=.goodsColorList}}
                                         {{range $key,$value := .goodsImageList}}
                                             <li>
-                                                <img  src="{{$value.ImgUrl}}" class="pic" />                                            
+                                                <img  src="{{$value.ImgUrl}}" class="pic" />     
+                                                <div class="color_list">
+                                                    <select class="relation_goods_color" goods_image_id="{{$value.Id}}">
+                                                        <option value="0">关联颜色</option>
+                                                        {{range $k,$v:=$goodsColor}}
+                                                            {{if eq $v.Checked true}}
+                                                            <option value="{{$v.Id}}" {{if eq $value.ColorId $v.Id}}selected{{end}}>{{$v.ColorName}}</option>
+                                                            {{end}}
+                                                        {{end}}
+                                                    </select>
+                                                </div>    
+                                                <div class="goods_image_delete" goods_image_id="{{$value.Id}}"></div>                                   
                                             </li>
                                         {{end}}
                                     </ul>
                                 </div>
+                                <div id="photoUploader"></div>
                             </div>
                         </div>
 
@@ -248,7 +258,29 @@
                 console.info(err);
             }
         });
-
+    })
+    $(function(){
+        $(".relation_goods_color").change(function(){
+            // 注意自定义标签的使用方法
+            var goods_image_id=$(this).attr("goods_image_id")
+            var color_id=$(this).val()
+            $.get("/admin/goods/changeGoodsImageColor",{"goods_image_id":goods_image_id,"color_id":color_id},function(response){
+                console.log(response)
+            })
+        })
+        $(".goods_image_delete").click(function(){
+            // 注意自定义标签的使用方法
+            var goods_image_id=$(this).attr("goods_image_id")
+            var _that=this
+            var flag=confirm("确定要删除吗")
+            if(flag){
+                $.get("/admin/goods/removeGoodsImage",{"goods_image_id":goods_image_id},function(response){
+                if(response.success){
+                    $(_that).parent().remove()
+                }
+            })
+            }
+        })
     })
 </script>
 </body>

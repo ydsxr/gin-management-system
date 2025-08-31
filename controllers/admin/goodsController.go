@@ -423,3 +423,40 @@ func (con GoodsController) Delete(c *gin.Context) {
 	}
 	con.Success(c, "删除数据成功", "/admin/goodsCate")
 }
+func (con GoodsController) ChangeGoodsImageColor(c *gin.Context) {
+	//获取图片id 获取颜色id
+	goodsImageId, err1 := models.Int(c.Query("goods_image_id"))
+	colorId, err2 := models.Int(c.Query("color_id"))
+	goodsImage := models.GoodsImage{Id: goodsImageId}
+	models.DB.Find(&goodsImage)
+	goodsImage.ColorId = colorId
+	err3 := models.DB.Save(&goodsImage).Error
+	if err1 != nil || err2 != nil || err3 != nil {
+		c.JSON(http.StatusOK,gin.H{
+			"success":false,
+			"result":"更新失败",
+		})
+	}else{
+		c.JSON(http.StatusOK,gin.H{
+			"success":true,
+			"result":"更新成功",
+		})
+	}
+}
+func (con GoodsController) RemoveGoodsImage(c *gin.Context) {
+	//获取图片id 
+	goodsImageId, err1 := models.Int(c.Query("goods_image_id"))
+	goodsImage := models.GoodsImage{Id: goodsImageId}
+	err2:=models.DB.Delete(&goodsImage).Error
+	if err1 != nil || err2 != nil {
+		c.JSON(http.StatusOK,gin.H{
+			"success":false,
+			"result":"删除失败",
+		})
+	}else{
+		c.JSON(http.StatusOK,gin.H{
+			"success":true,
+			"result":"删除成功",
+		})
+	}
+}

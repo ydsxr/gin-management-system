@@ -147,3 +147,7 @@ input[type=file]{
     margin: 20px auto;
     width: 200px;
 }
+#pagination{
+	display: flex;
+    justify-content: center;
+}

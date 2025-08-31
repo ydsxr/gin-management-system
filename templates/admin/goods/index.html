@@ -1,15 +1,12 @@
 {{ define "admin/goods/index.html" }}
 {{ template "admin/public/page_header.html" .}}
-
+<script type="text/javascript" src="/static/admin/js/jqPaginator.js"></script>
 <div class="container-fluid">
     <div class="row">
         <div class="panel panel-default">
             <div class="panel-heading">
                 <a href="/admin/goods/add" class="btn btn-primary">增加商品</a>
             </div>
-            <!--
-                列表展示
-            -->
             <div class="table-responsive">
                 <table class="table table-bordered">
                     <thead>                                   
@@ -85,11 +82,33 @@
                     </tbody>
                 </table>
             </div>
+            
         </div>
+        {{$page:=.page}}
+        {{$totalPages:=.totalPages}}
+        <div class="pagination" id="pagination" data-page="{{$page}}" data-total-pages="{{$totalPages}}"></div>
     </div>
 </div>
 
 </body>
 </html>
+<script>
+    $(function(){
+      var page = $('#pagination').data("page");
+      var totalPages = $('#pagination').data("total-pages");
+  
+      $('#pagination').jqPaginator({
+        totalPages: totalPages,
+        visiblePages: 5,
+        currentPage: page,
+        onPageChange: function (num, type) {
+          console.log(num, type);
+          if (type !== 'init') {
+            location.href = "/admin/goods?page=" + num;
+          }
+        }
+      });
+    });
+  </script>
 
 {{end}}

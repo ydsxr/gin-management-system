@@ -25,8 +25,8 @@ func (con NavController) Index(c *gin.Context) {
 	var count int64
 	models.DB.Table("nav").Count(&count)
 	c.HTML(200, "admin/nav/index.html", gin.H{
-		"navList": navList,
-		"page":page,
+		"navList":    navList,
+		"page":       page,
 		"totalPages": math.Ceil(float64(float64(count) / float64(pageSize))),
 	})
 }

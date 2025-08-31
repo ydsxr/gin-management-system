@@ -5,7 +5,6 @@ import (
 	"go_demo/models"
 	"math"
 	"net/http"
-	"os"
 	"strings"
 	"sync"
 
@@ -26,18 +25,44 @@ func (con GoodsController) Index(c *gin.Context) {
 	if page == 0 {
 		page = 1
 	}
-	//分页查询
+	//搜索条件
+	where := "is_delete=0"
+	// 获取keyword
+	keyword := c.Query("keyword")
+	if len(keyword) > 0 {
+		// 转义字符：把 \" 转为 " 转义字符可以看作一个字符
+		where += " AND title like \"%" + keyword + "%\""
+	}
+
+	// 分页查询
 	goodsList := []models.Goods{}
-	models.DB.Offset((page - 1) * pageSize).Limit(pageSize).Find(&goodsList)
-	//获取总数量
+	models.DB.Where(where).Offset((page - 1) * pageSize).Limit(pageSize).Find(&goodsList)
+	// 获取总数量
 	var count int64
-	models.DB.Table("goods").Count(&count)
-	c.HTML(http.StatusOK, "admin/goods/index.html", gin.H{
-		"goodsList":  goodsList,
-		//注意float64类型
-		"totalPages": math.Ceil(float64(float64(count) / float64(pageSize))),
-		"page":       page,
-	})
+	models.DB.Where(where).Table("goods").Count(&count)
+	if len(goodsList) > 0 {
+		c.HTML(http.StatusOK, "admin/goods/index.html", gin.H{
+			"goodsList": goodsList,
+			//注意float64类型
+			"totalPages": math.Ceil(float64(float64(count) / float64(pageSize))),
+			"page":       page,
+			"keyword":    keyword,
+		})
+	} else {
+		// 防止第一页没有数据 陷入死循环
+		if page != 1 {
+			c.Redirect(302, "/admin/goods")
+		} else {
+			c.HTML(http.StatusOK, "admin/goods/index.html", gin.H{
+				"goodsList": goodsList,
+				//注意float64类型
+				"totalPages": math.Ceil(float64(float64(count) / float64(pageSize))),
+				"page":       page,
+				"keyword":    keyword,
+			})
+		}
+	}
+
 }
 func (con GoodsController) Add(c *gin.Context) {
 	// 获取商品分类
@@ -280,6 +305,8 @@ func (con GoodsController) Edit(c *gin.Context) {
 		"goodsTypeList":  goodsTypeList,
 		"goodsAttrStr":   goodsAttrStr,
 		"goodsImageList": goodsImageList,
+		// 获取上个页面的地址
+		"prevPage": c.Request.Referer(),
 	})
 }
 func (con GoodsController) DoEdit(c *gin.Context) {
@@ -290,6 +317,8 @@ func (con GoodsController) DoEdit(c *gin.Context) {
 		con.Error(c, "获取ID失败", "/admin/goods")
 		return
 	}
+	// 获取上一页地址
+	prevPage := c.PostForm("prevPage")
 	title := c.PostForm("title")
 	subTitle := c.PostForm("sub_title")
 	// goodsSn := c.PostForm("goods_sn")
@@ -414,7 +443,11 @@ func (con GoodsController) DoEdit(c *gin.Context) {
 		wg.Done() // 标记减一
 	}()
 	wg.Wait() // 标记为0时开始往下执行
-	con.Success(c, "修改商品成功", "/admin/goods")
+	if len(prevPage) > 0 {
+		con.Success(c, "修改商品成功", prevPage)
+	} else {
+		con.Success(c, "修改商品成功", "/admin/goods")
+	}
 
 }
 func (con GoodsController) Delete(c *gin.Context) {
@@ -422,19 +455,20 @@ func (con GoodsController) Delete(c *gin.Context) {
 	if err1 != nil {
 		con.Error(c, "传入参数错误", "/admin/goodsCate")
 	}
-	goodsCate := models.GoodsCate{Id: id}
-	models.DB.Find(&goodsCate)
-	ImgSrc := goodsCate.CateImg
-	err2 := models.DB.Delete(&goodsCate).Error
-	if err2 != nil {
-		con.Error(c, "删除数据失败", "/admin/goodsCate")
-		return
+	// 软删除
+	goods := models.Goods{Id: id}
+	models.DB.Find(&goods)
+	goods.IsDelete = 1
+	goods.Status = 0
+	models.DB.Save(&goods)
+	// 获取上一页
+	prevPage := c.Request.Referer()
+	if len(prevPage) > 0 {
+		con.Success(c, "删除数据成功", prevPage)
+	} else {
+		con.Success(c, "删除数据成功", "/admin/goods")
 	}
-	err3 := os.Remove("./" + ImgSrc)
-	if err3 != nil {
-		con.Error(c, "删除图片失败", "/admin/goodsCate")
-	}
-	con.Success(c, "删除数据成功", "/admin/goodsCate")
+
 }
 func (con GoodsController) ChangeGoodsImageColor(c *gin.Context) {
 	//获取图片id 获取颜色id

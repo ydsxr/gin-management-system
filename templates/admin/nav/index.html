@@ -1,0 +1,89 @@
+{{ define "admin/nav/index.html" }}
+{{ template "admin/public/page_header.html" .}}
+<script type="text/javascript" src="/static/admin/js/jqPaginator.js"></script>
+    <!--
+        列表展示
+    -->
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <a href="/admin/nav/add" class="btn btn-primary">增加导航</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead>
+                    <tr class="th">
+                        <th>导航名称</th>
+                        <th>关联商品</th>
+                        <th>跳转地址</th>
+                        <th>导航位置</th>
+                        <th class="text-center">排序</th>
+                        <th class="text-center">状态</th>
+                        <th class="text-center">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $key,$value := .navList}}
+                    <tr>
+                        <td>{{$value.Title}}</td>
+                        <td>{{$value.Relation}}</td>
+                        <td>{{$value.Link}}</td>
+                        <td>
+                            {{if eq $value.Position 1}}
+                            顶部
+                            {{else if eq $value.Position 2}}
+                            中间
+                            {{else if eq $value.Position 3}}
+                            底部
+                            {{end}}
+                        </td>
+                        <td class="text-center">
+    
+                            <span class="chSpanNum" data-id="{{$value.Id}}" data-table="nav" data-field="sort"
+                                data-num="{{$value.Sort}}">{{$value.Sort}}</span>
+                        </td>
+                        <td align="center">
+                            {{if eq $value.Status 1}}
+                            <img src="/static/admin/images/yes.gif" class="chStatus" data-id="{{$value.Id}}"
+                                data-table="nav" data-field="status" />
+                            {{else}}
+                            <img src="/static/admin/images/no.gif" class="chStatus" data-id="{{$value.Id}}" data-table="nav"
+                                data-field="status" />
+                            {{end}}
+                        </td>
+    
+                        <td class="text-center">
+                            <a href="/admin/nav/edit?id={{$value.Id}}" />修改</a> 　
+    
+                            <a class="delete" href="/admin/nav/delete?id={{$value.Id}}" />删除</a>
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>    
+    </div>
+    <div class="pagination" id="pagination" data-page="{{.page}}" data-total_pages="{{.totalPages}}"></div>
+
+</body>
+</html>
+<script>
+    $(function(){
+        var page = $('#pagination').data("page");
+        var total_pages = $('#pagination').data("total_pages");
+        $('#pagination').jqPaginator({
+        totalPages: total_pages,
+        visiblePages: 5,
+        currentPage: page,
+        onPageChange: function (num, type) {
+        //    console.log(num, type)
+           
+            console.log(num, type);
+            if(type!='init'){
+                location.href="/admin/nav?page="+num;
+            }
+
+        }
+    });
+    })
+</script>
+{{end}}
